@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Rooms</title>
+</head>
+<body>
+<input type="text" name="title">
+<input type="submit" value="reg">
+<div class="rooms">
+
+</div>
+</body>
+<script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+<!-- Firebase (Not Hosting)-->
+<script src="https://www.gstatic.com/firebasejs/8.9.0/firebase.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.9.0/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.9.0/firebase-messaging.js"></script>
+<!-- Snipet -->
+<script src="/js/snipet.js"></script>
+<script>
+    const messaging = firebase.messaging();
+    messaging.onMessage((payload) => {
+        console.log('Message received. ', payload);
+    });
+</script>
+<script>
+    const origin = 'http://localhost:8080';
+    window.addEventListener('load', () => {
+
+        const btnReg = document.querySelector('input[type="submit"]');
+        const inputTitle = document.querySelector('input[name="title"]');
+        const rooms = document.querySelector('.rooms');
+
+        /* request for list */
+        (async () => {
+            const list = await axios({
+                url: `${origin}/api/v1/rooms`,
+                method: 'GET'
+            }).then(response => response.data);
+
+            let html = '';
+
+            list.forEach((room, idx) => {
+                html += `<div class="room">
+                             <a href="/chat/room.html?id=${room.id}">${room.title}</a>
+                          </div>`;
+            });
+
+            rooms.insertAdjacentHTML('beforeend', html);
+        })();
+
+        btnReg.addEventListener('click', async (e) => {
+            e.preventDefault();
+
+            const title = inputTitle.value;
+
+            inputTitle.value = '';
+
+             const chatRoomId = await axios({
+                url: `${origin}/api/v1/room`,
+                method: 'POST',
+                headers: {'content-type':'application/json'},
+                data: {title}
+            });
+
+            const html = `<div class="room">
+                             <a href="/chat/room.html?id=${chatRoomId.data}">${title}</a>
+                          </div>`;
+
+            rooms.insertAdjacentHTML('beforebegin', html);
+        });
+
+    });
+</script>
+</html>

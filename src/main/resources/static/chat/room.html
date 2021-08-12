@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Room</title>
+</head>
+<body>
+
+<h1 class="chat-title"></h1>
+
+<div class="chats">
+
+</div>
+<form>
+    <input type="text" id="chat-content">
+    <input type="submit" value="전송" id="btn-chat">
+</form>
+
+<!-- Axios -->
+<script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+<!-- SockJS Client, STOMP Client -->
+<script src="https://cdn.jsdelivr.net/npm/sockjs-client@1/dist/sockjs.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/stomp.js/2.3.3/stomp.min.js"></script>
+<!-- Firebase (Not Hosting)-->
+<script src="https://www.gstatic.com/firebasejs/8.9.0/firebase.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.9.0/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.9.0/firebase-messaging.js"></script>
+<!-- Snipet -->
+<script src="/js/snipet.js"></script>
+<script>
+
+</script>
+<script>
+    window.addEventListener('load', () => {
+
+        const messaging = firebase.messaging();
+        messaging.onMessage((payload) => {
+            console.log('Message received. ', payload);
+        });
+
+        const origin = 'http://localhost:8080';
+        const url = `${origin}/stomp/chat`;
+
+        const param = new URLSearchParams(location.search);
+        const chatRoomId = param.get("id");
+        const memberId = param.get("memberId");
+        const nickname = param.get("nickname");
+
+        const chats = document.querySelector('.chats');
+        const messageContent = document.querySelector('#chat-content');
+        const btnSend = document.querySelector('#btn-chat');
+
+        const sockJS = new SockJS(`${url}`);
+        const stomp = Stomp.over(sockJS);
+
+        stomp.connect({}, function (frame) { //just stomp
+
+            console.log('STOMP Connected');
+
+            stomp.subscribe(`/sub/room/${chatRoomId}`, function (content) {
+                const payload = JSON.parse(content.body);
+                console.log(payload);
+                let className = payload.memberId == memberId ? 'mine' : 'yours';
+
+                const html = `<div class="${className}">
+                                <div class="memberId">${payload.memberId}</div>
+                                <div class="message">${payload.message}</div>
+                            </div>`
+
+                chats.insertAdjacentHTML('beforeend', html);
+            });
+
+            //입장 메세지 전송
+            stomp.send(`/pub/chat/enter`, {}, JSON.stringify({
+                memberId,
+                chatRoomId,
+                nickname
+            }));
+
+        });
+
+        window.onbeforeunload = (e) => {
+
+            e.preventDefault();
+
+            stomp.send(`/pub/chat/exit`, {}, JSON.stringify({
+                memberId,
+                chatRoomId,
+                nickname
+            }));
+        }
+
+        //메세지 전송 버튼 click
+        btnSend.addEventListener('click', (e) => {
+            e.preventDefault();
+
+            const message = messageContent.value;
+            messageContent.value = '';
+
+            stomp.send(`/pub/chat/message`, {}, JSON.stringify({
+                message: message,
+                memberId: memberId,
+                chatRoomId: chatRoomId,
+                nickname
+            }));
+        });
+    });
+</script>
+</body>
+</html>

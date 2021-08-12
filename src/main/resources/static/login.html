@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+<h1>Login page</h1>
+<form id="form-login">
+    <input type="text" name="nickname">
+    <input type="hidden" name="token">
+    <input type="submit" value="Send">
+</form>
+
+<!-- Firebase (Hosting)-->
+<!--<script src="/__/firebase/8.9.0/firebase-app.js"></script>-->
+<!--<script src="/__/firebase/init.js"></script>-->
+<!-- Axios -->
+<script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+<!-- Firebase (Not Hosting)-->
+<script src="https://www.gstatic.com/firebasejs/8.9.0/firebase.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.9.0/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.9.0/firebase-messaging.js"></script>
+<!-- Snipet -->
+<script src="/js/snipet.js"></script>
+<script>
+    window.addEventListener('load', () => {
+        const inputToken = document.querySelector('input[name="token"]');
+        //메시징 객체 가져오기
+        const messaging = firebase.messaging();
+        //등록 토큰 액세스
+        /*
+        메시징 서비스에 firebase-messaging-sw.js 파일이 필요합니다.
+        firebase-messaging-sw.js 파일이 아직 없다면 토큰을 가져오기 전에 이 이름으로 빈 파일을 만들어 도메인의 루트에 저장합니다.
+        나중에 클라이언트 설정 프로세스에서 중요한 내용을 파일에 추가할 수 있습니다.
+        * */
+        // Get registration token. Initially this makes a network call, once retrieved
+        // subsequent calls to getToken will return from cache.
+        messaging.getToken({ vapidKey: 'BAOohY0LekDej6CavI2SxllFB4wjh1iPEOIrJaHCgqgc3G7OQfTXlH6P2njfqn68qwYSXexq_gCcqUfCan_e4Dk' }).then((currentToken) => {
+
+            console.log(currentToken);
+
+            if (currentToken) {
+                // Send the token to your server and update the UI if necessary
+                inputToken.value = currentToken;
+            } else {
+                // Show permission request UI
+                console.log('No registration token available. Request permission to generate one.');
+                // ...
+            }
+        }).catch((err) => {
+            console.log('An error occurred while retrieving token. ', err);
+            // ...
+        });
+
+        const origin = 'http://localhost:8080';
+
+        const formLogin = document.querySelector('#form-login');
+        const inputNickname = formLogin.querySelector('input[name="nickname"]');
+        const btnLogin = formLogin.querySelector('input[type="submit"]');
+
+        btnLogin.addEventListener('click', (e) => {
+            e.preventDefault();
+            /* request for login */
+            axios({
+                url: `${origin}/api/v1/login`,
+                method: 'POST',
+                headers: { 'content-type': 'application/json' },
+                data: {
+                    nickname: inputNickname.value,
+                    token: inputToken.value
+                }
+            })
+                .then(result => result.data)
+                .then((data) => {
+                    if(data === 'success')
+                        location = `/message/test.html`;
+                    else
+                        alert('Exception!!');
+                });
+        })
+    });
+</script>
+</body>
+</html>

@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+<h1>TEST PAGE</h1>
+
+<div class="box">
+    <div>
+        <label>ID</label>
+        <input type="text" name="id">
+    </div>
+    <div>
+        <label>ChatRoomId</label>
+        <input type="text" name="chatRoomId">
+    </div>
+    <div>
+        <label>Nickname</label>
+        <input type="text" name="nickname">
+    </div>
+    <button class="btn-send">send</button>
+</div>
+<a href="/login.html">login</a>
+<label>nickname</label>
+<input type="text" name="nickname" class="logout-nickname">
+<button class="btn-logout">LOGOUT</button>
+
+<div class="comment-box">
+
+    <div>
+        <label>boardId</label>
+        <input type="text" name="boardId">
+    </div>
+    <div>
+        <label>Nickname</label>
+        <input type="text" name="comment-nickname">
+    </div>
+    <button class="btn-comment">register</button>
+</div>
+
+<!-- Firebase (Hosting)-->
+<!--<script src="/__/firebase/8.9.0/firebase-app.js"></script>-->
+<!--<script src="/__/firebase/init.js"></script>-->
+<!-- Axios -->
+<script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+<!-- Firebase (Not Hosting)-->
+<script src="https://www.gstatic.com/firebasejs/8.9.0/firebase.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.9.0/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.9.0/firebase-messaging.js"></script>
+<!-- Snipet -->
+<script src="/js/snipet.js"></script>
+<script>
+    //window.addEventListener('load', () => {
+        const origin = 'http://localhost:8080';
+
+        const box = document.querySelector('.box');
+
+        const inputNickname = box.querySelector('input[name="nickname"]');
+        const inputId = box.querySelector('input[name="id"]');
+        const inputChatRoomId = box.querySelector('input[name="chatRoomId"]');
+        const btnSend = box.querySelector('.btn-send');
+
+        const nickname = document.querySelector('.logout-nickname');
+        const btnLogout = document.querySelector('.btn-logout');
+
+        const commentBox = document.querySelector('.comment-box');
+        const commentNickname = commentBox.querySelector('input[name="comment-nickname"]');
+        const commentBoardId = commentBox.querySelector('input[name="boardId"]');
+        const btnComment = commentBox.querySelector('.btn-comment');
+
+        btnSend.addEventListener('click', () => {
+            const nickname = inputNickname.value;
+            const id = inputId.value;
+            const chatRoomId = inputChatRoomId.value;
+
+            inputNickname.value = '';
+            inputId.value = '';
+            inputChatRoomId.value = '';
+
+            fetch(`${origin}/api/v1/chat`, {
+                method: 'post',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    nickname,
+                    id,
+                    chatRoomId
+                })
+            })
+                .then(response => console.log(response));
+        });
+
+        btnLogout.addEventListener('click', async (e) => {
+            e.preventDefault();
+
+            /* request for logout */
+            const result = await axios({
+                url: `${origin}/api/v1/logout`,
+                method: 'POST',
+                headers: {'content-type' : 'application/json'},
+                data: {nickname: nickname.value}
+            }).data;
+
+            if(result === 'success')
+                location = `${origin}/login.html`;
+            else
+                alert('Exception!');
+        });
+
+        btnComment.addEventListener('click', (e) => {
+            e.preventDefault();
+
+            /* request for comment */
+
+            axios({
+                url: `${origin}/api/v1/comment`,
+                method: 'POST',
+                headers: {'content-type' : 'application/json'},
+                data: {
+                    nickname: commentNickname.value,
+                    boardId: commentBoardId.value
+                }
+            }).then(result => result.data)
+            .then(data => console.log(data));
+
+            commentBoardId.value = '';
+            commentNickname.value = '';
+        });
+    //});
+</script>
+<script>
+    //register serviceWorker
+    //navigator.serviceWorker.register('/firebase-messaging-sw.js');
+    //메시징 객체 가져오기
+    const messaging = firebase.messaging();
+
+    messaging.onMessage((payload) => {
+        console.log('Message received. ', payload);
+        alert(payload.notification);
+        // const title = payload.notification.title
+        // const options = {
+        //     body : payload.notification.body
+        // }
+        // navigator.serviceWorker.ready.then(registration => {
+        //     console.log('aaa');
+        //     registration.showNotification(title, options);
+        // });
+    });
+</script>
+</body>
+</html>
