@@ -19,9 +19,8 @@ public class FcmTestApplication {
             return new WebMvcConfigurer() {
                 @Override
                 public void addCorsMappings(CorsRegistry registry) {
-                    registry.addMapping("/*/**")
-                            .allowedOrigins("*")
-                            .allowedOriginPatterns("*")
+                    registry.addMapping("/**")
+                            .allowedOrigins("https://ichatu.ga", "https://ichatu-d9085.web.app")
                             .allowedMethods("GET", "POST", "PUT", "DELETE")
                             .allowCredentials(false)
                             .maxAge(3600);
