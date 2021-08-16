@@ -11,7 +11,7 @@ public class WebStompConfig implements WebSocketMessageBrokerConfigurer {
     @Override
     public void registerStompEndpoints(StompEndpointRegistry registry) {
         registry.addEndpoint("stomp/chat")
-                .setAllowedOriginPatterns("http://*:8080", "http://*.*.*.*:8080")
+                .setAllowedOriginPatterns("https://ichatu.ga")
                 .withSockJS();
     }
 
